@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="fab_labels">
+        <item>@string/label_1</item>
+        <item>@string/label_2</item>
+    </string-array>
+</resources>
