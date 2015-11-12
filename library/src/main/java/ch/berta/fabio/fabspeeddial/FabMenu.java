@@ -17,7 +17,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -25,11 +24,12 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
 import android.view.animation.OvershootInterpolator;
 
-import java.lang.reflect.Field;
 import java.util.List;
 
 /**
- * Created by fabio on 15.08.15.
+ * Provides an implementation of the FAB quick dial pattern as described by Google in its Material
+ * Design Guidelines. Uses standard {@link FloatingActionButton} from the design support lib to
+ * draw the speed dial options.
  */
 @CoordinatorLayout.DefaultBehavior(FabMenu.Behavior.class)
 public class FabMenu extends ViewGroup {
@@ -39,6 +39,7 @@ public class FabMenu extends ViewGroup {
     private static final long ROTATE_ANIMATION_DURATION = 300l;
     private static final String STATE_SUPER = "state_super";
     private static final String STATE_MENU_IS_OPENED = "state_menu_is_opened";
+    private static final String LOG_TAG = FabMenu.class.getSimpleName();
     private final Rect mShadowPadding = new Rect();
     private ObjectAnimator mOpenAnimator;
     private ObjectAnimator mCloseAnimator;
@@ -51,6 +52,7 @@ public class FabMenu extends ViewGroup {
     private int mLabelsMargin;
     private CharSequence[] mLabelNames;
     private RotateDrawable mRotateDrawable;
+    private int mContentPadding;
 
     public FabMenu(Context context) {
         this(context, null);
@@ -68,13 +70,15 @@ public class FabMenu extends ViewGroup {
 
     private void init(Context context, AttributeSet attrs, int defStyleAttr) {
         if (Utils.isRunningLollipopAndHigher()) {
-            int normalSpace = getResources().getDimensionPixelSize(R.dimen.normal_space);
+            final int normalSpace = getResources().getDimensionPixelSize(R.dimen.normal_space);
             mLabelsMargin = normalSpace;
             mButtonSpacing = normalSpace;
         } else {
+            int maxContentSize = (int) getResources().getDimension(R.dimen.fab_content_size);
+            mContentPadding = (getSizeDimension() - maxContentSize) / 2;
             // shadow drawable will take up a lot of space, account for it
-            mLabelsMargin = Utils.dpToPx(getContext(), 0f);
-            mButtonSpacing = Utils.dpToPx(getContext(), -20f);
+            mLabelsMargin = Utils.dpToPx(context, 0f);
+            mButtonSpacing = Utils.dpToPx(context, -24f);
         }
 
         TypedArray attr = context.obtainStyledAttributes(attrs, R.styleable.FabMenu, defStyleAttr, 0);
@@ -87,6 +91,17 @@ public class FabMenu extends ViewGroup {
 
         createMenuFab();
         setRotateAnimators();
+    }
+
+    /**
+     * Returns the size of the fab menu.
+     * <p/>
+     * TODO: support mini size as well.
+     *
+     * @return the size of the fab
+     */
+    private int getSizeDimension() {
+        return getResources().getDimensionPixelSize(R.dimen.fab_size_normal);
     }
 
     private void createMenuFab() {
@@ -263,32 +278,17 @@ public class FabMenu extends ViewGroup {
         }
     }
 
-    /**
-     * This is horrible and will break if Google changes something in its FAB implementation.
-     * TODO: fix this shit and find a better way to get the shadow padding!
-     */
     private void setFakeShadowOffset() {
-        Field shadowPaddingField = null;
-        try {
-            shadowPaddingField = mMenuFab.getClass().getDeclaredField("mShadowPadding");
-            shadowPaddingField.setAccessible(true);
-        } catch (NoSuchFieldException ignored) {
-        }
-
-        if (shadowPaddingField != null) {
-            Rect shadowPadding;
-            try {
-                shadowPadding = (Rect) shadowPaddingField.get(mMenuFab);
-                mShadowPadding.set(
-                        shadowPadding.left,
-                        shadowPadding.top,
-                        shadowPadding.right,
-                        shadowPadding.bottom);
-            } catch (IllegalAccessException ignored) {
-            }
-        }
+        final int startEnd = mMenuFab.getPaddingStart() - mContentPadding;
+        final int topBottom = mMenuFab.getPaddingTop() - mContentPadding;
+        mShadowPadding.set(startEnd, topBottom, startEnd, topBottom);
     }
 
+    /**
+     * Hides the menu button.
+     *
+     * @param animate whether to animate the transition
+     */
     public void hideMenuButton(boolean animate) {
         if (animate) {
             Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.fab_out);
@@ -316,6 +316,11 @@ public class FabMenu extends ViewGroup {
         }
     }
 
+    /**
+     * Shows the menu button.
+     *
+     * @param animate whether to animate the transition
+     */
     public void showMenuButton(boolean animate) {
         if (animate) {
             Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.fab_in);
@@ -328,6 +333,9 @@ public class FabMenu extends ViewGroup {
         }
     }
 
+    /**
+     * Toggles the visibility of the speed dial options.
+     */
     public void toggle() {
         if (mMenuIsOpened) {
             close();
@@ -336,6 +344,9 @@ public class FabMenu extends ViewGroup {
         }
     }
 
+    /**
+     * Closes the speed dial options.
+     */
     public void close() {
         if (!mMenuIsOpened) {
             return;
@@ -362,6 +373,9 @@ public class FabMenu extends ViewGroup {
         mMenuIsOpened = false;
     }
 
+    /**
+     * Opens the speed dial options.
+     */
     public void open() {
         if (mMenuIsOpened) {
             return;
@@ -413,13 +427,16 @@ public class FabMenu extends ViewGroup {
         super.onRestoreInstanceState(state);
     }
 
+    /**
+     * Provides a {@link CoordinatorLayout.Behavior} that mimics the standard
+     * {@link FloatingActionButton} behaviour, i.e. moving out of the way for a {@link Snackbar}.
+     * <p/>
+     * Code copy pasted from the Google {@link FloatingActionButton} implementation and adapted
+     * slightly.
+     */
     public static class Behavior extends CoordinatorLayout.Behavior<FabMenu> {
-        private static final boolean SNACKBAR_BEHAVIOR_ENABLED;
 
-        static {
-            SNACKBAR_BEHAVIOR_ENABLED = Build.VERSION.SDK_INT >= 11;
-        }
-
+        private static final boolean SNACKBAR_BEHAVIOR_ENABLED = Build.VERSION.SDK_INT >= 11;
         private float mTranslationY;
 
         public Behavior() {

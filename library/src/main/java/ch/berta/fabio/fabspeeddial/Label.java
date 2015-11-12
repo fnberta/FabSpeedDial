@@ -1,6 +1,7 @@
 package ch.berta.fabio.fabspeeddial;
 
 import android.content.Context;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.view.animation.Animation;
@@ -8,7 +9,9 @@ import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 /**
- * Created by fabio on 18.08.15.
+ * Represents a label that describes what the {@link FloatingActionButton} will do when clicked.
+ * <p/>
+ * Subclass of {@link TextView}.
  */
 public class Label extends TextView {
 
@@ -20,7 +23,7 @@ public class Label extends TextView {
     }
 
     /**
-     * Shows label with same animation as design support lib FAB
+     * Shows the label with same animation as design support lib FAB
      */
     public void show(boolean animate) {
         if (animate) {
@@ -36,7 +39,8 @@ public class Label extends TextView {
 
     /**
      * Hides label either with same animation as design support lib or immediately
-     * @param animate
+     *
+     * @param animate whether to animate the transition
      */
     public void hide(boolean animate) {
         if (animate) {
