@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-  compile 'com.github.fnberta:FabSpeedDial:0.1'
+  compile 'com.github.fnberta:FabSpeedDial:0.2'
 }
 ```
 
