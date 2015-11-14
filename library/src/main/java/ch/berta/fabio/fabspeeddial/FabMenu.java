@@ -202,6 +202,9 @@ public class FabMenu extends ViewGroup {
 
             mMaxButtonWidth = Math.max(mMaxButtonWidth, child.getMeasuredWidth());
             height += child.getMeasuredHeight();
+            if (child != mMenuFab) {
+                height += mButtonSpacing;
+            }
 
             Label label = (Label) child.getTag(R.id.fab_label);
             if (label != null) {
@@ -211,7 +214,7 @@ public class FabMenu extends ViewGroup {
 
         width = mMaxButtonWidth + (maxLabelWidth > 0 ? maxLabelWidth + mLabelsMargin : 0) +
                 getPaddingLeft() + getPaddingRight();
-        height += mButtonSpacing * (mButtonsCount - 1) + getPaddingTop() + getPaddingBottom();
+        height += getPaddingTop() + getPaddingBottom();
 
         if (getLayoutParams().width == LayoutParams.MATCH_PARENT) {
             width = getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec);
