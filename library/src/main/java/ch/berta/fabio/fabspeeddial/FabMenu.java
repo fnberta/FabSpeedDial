@@ -74,7 +74,7 @@ public class FabMenu extends ViewGroup {
             mLabelsMargin = normalSpace;
             mButtonSpacing = normalSpace;
         } else {
-            int maxContentSize = (int) getResources().getDimension(R.dimen.fab_content_size);
+            int maxContentSize = (int) getResources().getDimension(R.dimen.fab_menu_content_size);
             mContentPadding = (getSizeDimension() - maxContentSize) / 2;
             // shadow drawable will take up a lot of space, account for it
             mLabelsMargin = Utils.dpToPx(context, 0f);
@@ -101,7 +101,7 @@ public class FabMenu extends ViewGroup {
      * @return the size of the fab
      */
     private int getSizeDimension() {
-        return getResources().getDimensionPixelSize(R.dimen.fab_size_normal);
+        return getResources().getDimensionPixelSize(R.dimen.fab_menu_fab_size_normal);
     }
 
     private void createMenuFab() {
